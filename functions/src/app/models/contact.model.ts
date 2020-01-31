@@ -2,11 +2,12 @@ import { CollectionModel } from "./interface.model";
 
 export class ContactModel implements CollectionModel {
     id: number;
+    idServer?: string;
     name: string;
     phone: string;
     photo: string;
     active?: boolean;
-    wasSync?: boolean;
+    wasSync?: number;
 
     createdAt: Date;
     updatedAt: Date;

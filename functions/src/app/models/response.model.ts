@@ -1,3 +1,6 @@
+import { ContactModel } from "./contact.model";
+
 export class ResponseModel {
-    syncSucessfull: boolean;
+    deleteLocalData: boolean;
+    contacts: Array<ContactModel>;
 }

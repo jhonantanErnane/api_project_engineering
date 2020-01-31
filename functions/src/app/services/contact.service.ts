@@ -37,12 +37,53 @@ export class ContactService {
         }
     };
 
-    update = async (contacts: Array<ContactModel>): Promise<WriteResult | ResponseModel | ServerError> => {
+    update = async (contacts: Array<ContactModel>): Promise<Array<ContactModel>> => {
         try {
             contacts.forEach(async (contact, i) => {
-                await this.collection.doc(`${contact.id}`).set(contact, { merge: true });
+                contact.wasSync = 1;
+                await this.collection.doc(`${contact.id}`).set(contact);
             });
-            return { syncSucessfull: true };
+            return contacts;
+        } catch (err) {
+            throw new ServerError(err, 400);
+        }
+    };
+
+    create = async (contacts: Array<ContactModel>): Promise<ResponseModel> => {
+        try {
+            const response: ResponseModel = {
+                deleteLocalData: false,
+                contacts: []
+            };
+            const listContacts = await this.find();
+            let maxId = 0;
+            listContacts.forEach(contact => {
+                if (maxId < contact.id) {
+                    maxId = contact.id;
+                }
+            });
+
+            contacts.forEach(c => {
+                if (c.id <= maxId) {
+                    response.deleteLocalData = true;
+                }
+            });
+
+            if (response.deleteLocalData) {
+                response.contacts = listContacts;
+            }
+            
+            contacts.forEach(async (contact, i) => {
+                contact.wasSync = 1;
+                contact.id = ++maxId;
+                contact.idServer = this.collection.doc().id;
+                // console.log(contact.idServer);
+                response.contacts.push(contact);
+                await this.collection.doc(`${contact.id}`).set(contact);
+            });
+            // console.log(response);
+            
+            return response;
         } catch (err) {
             throw new ServerError(err, 400);
         }
